@@ -1,32 +1,21 @@
-# House Price Prediction with scikit-learn
+# Ames House Price Prediction
 
-Predicts residential house sale prices using regularized linear regression on the Ames Housing dataset (Kaggle "House Prices: Advanced Regression Techniques", 1,460 homes, 80 features).
+Predicting residential sale prices on the Ames Housing dataset with scikit-learn, comparing **Ridge**, **Lasso** and **Ordinary Least Squares** regression. The project covers missing-value handling, categorical encoding, a log-transformed target, scaling inside pipelines, and hyperparameter tuning with cross-validated grid search.
 
-## Approach
-- **Cleaning:** treated missing values that mean "feature absent" (e.g. no pool, no garage) as their own category, and imputed the rest (neighborhood median for `LotFrontage`, mode for `Electrical`).
-- **Encoding:** one-hot encoded categorical features, including numeric codes that are really categories (`MSSubClass`, `MoSold`).
-- **Target transform:** applied `log1p` to `SalePrice` to handle its right skew, which turned Linear Regression from R² -0.07 into R² 0.84.
-- **Models:** Linear Regression, Ridge and Lasso in `Pipeline`s with `StandardScaler`, so scaling is fit on training data only (no leakage).
-- **Tuning:** `GridSearchCV` (5-fold CV) over a log-spaced grid of `alpha`.
+## Results
 
-## Results (log-price scale, 80/20 train/test split)
+Evaluated on a held-out 20% test set (292 houses). Errors are in **log-price units**, because the models predict `log1p(SalePrice)`.
 
-| Model | RMSE | R² |
-|---|---|---|
-| Ridge | 0.155 | 0.872 |
-| Linear Regression | 0.171 | 0.844 |
-| Lasso | _fill in after re-tuning_ | _fill in_ |
+| Model | Tuned alpha | RMSE | MAE | R² |
+|---|---|---|---|---|
+| **Lasso** | 0.01 | **0.151** | 0.102 | **0.878** |
+| Ridge | 483 | 0.155 | 0.099 | 0.872 |
+| Linear Regression | n/a | 0.171 | 0.096 | 0.844 |
 
-An RMSE of 0.155 in log units means predictions are typically within about 15% of the true price.
+An RMSE of about 0.15 in log units corresponds to a typical error of roughly 15% of the house price.
 
-## Lessons learned
-- Regularization strength has to be re-tuned when the target scale changes: an alpha tuned on raw dollars zeroes out every Lasso coefficient on a log target.
-- Predictions are converted back to dollars with `np.expm1`.
+**Takeaways**
 
-## Tech stack
-Python, pandas, NumPy, scikit-learn, matplotlib, seaborn, Jupyter
-
-## Run it
-1. Download `train.csv` from the Kaggle competition page.
-2. Install dependencies: `pip install pandas numpy scikit-learn matplotlib seaborn jupyter`
-3. Open `House_predictions_sciit_learn.ipynb` and run all cells.
+- Lasso and Ridge perform comparably. The gap between them is small and within what a different train/test split could change, so neither is a decisive winner.
+- Lasso keeps **57 of 282 features** and sets the rest to exactly zero, giving a much simpler model with accuracy at least on par with Ridge.
+- Plain Linear Regression is the weakest on RMSE and R², which is the case for regularization on
